@@ -17,3 +17,5 @@ Pods/
 # Environment / Secrets
 .env
 *.xcconfig
+
+Config/Config.xcconfig
