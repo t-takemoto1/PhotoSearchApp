@@ -12,13 +12,12 @@ final class PexelsAPIClient {
     
     private let apiKey: String
 
-    init(apiKey: String) {
+    init() {
         guard let apiKey = Bundle.main.object(
             forInfoDictionaryKey: "PEXELS_API_KEY"
         ) as? String else {
             fatalError("PEXELS_API_KEY is not configured")
         }
-        
         self.apiKey = apiKey
     }
     
@@ -78,6 +77,4 @@ final class PexelsAPIClient {
             }
         }
     }
-    
-    
 }

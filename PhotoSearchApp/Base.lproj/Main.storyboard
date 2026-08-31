@@ -16,9 +16,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="r4t-lJ-K3e">
-                                <rect key="frame" x="0.0" y="53" width="393" height="779"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="r4t-lJ-K3e">
+                                <rect key="frame" x="0.0" y="130.33333333333331" width="393" height="637.66666666666674"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="BiC-VA-EkC">
@@ -35,10 +34,40 @@
                                     <outlet property="delegate" destination="BYZ-38-t0r" id="A4F-g3-Sbv"/>
                                 </connections>
                             </tableView>
+                            <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JGY-gq-Sg8">
+                                <rect key="frame" x="16" y="80" width="361" height="34.333333333333343"/>
+                                <subviews>
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="SerchTextField" borderStyle="roundedRect" placeholder="検索ワードを入力してください" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ecb-m6-EIU">
+                                        <rect key="frame" x="0.0" y="0.0" width="305" height="34.333333333333336"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits"/>
+                                    </textField>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SNr-Cx-Tpg">
+                                        <rect key="frame" x="305" y="0.0" width="56" height="34.333333333333336"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="検索"/>
+                                        <connections>
+                                            <action selector="searchButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="MVQ-fI-ogK"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="r4t-lJ-K3e" firstAttribute="top" secondItem="JGY-gq-Sg8" secondAttribute="bottom" constant="16" id="5WV-mb-DEf"/>
+                            <constraint firstItem="r4t-lJ-K3e" firstAttribute="centerX" secondItem="JGY-gq-Sg8" secondAttribute="centerX" id="A8e-Nw-dVf"/>
+                            <constraint firstItem="JGY-gq-Sg8" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="16" id="EWA-Rj-3V8"/>
+                            <constraint firstItem="JGY-gq-Sg8" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="80" id="G27-kT-b0d"/>
+                            <constraint firstAttribute="trailing" secondItem="JGY-gq-Sg8" secondAttribute="trailing" constant="16" id="aUO-BI-L3X"/>
+                            <constraint firstItem="r4t-lJ-K3e" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="h8H-Lq-Tkz"/>
+                            <constraint firstAttribute="bottomMargin" secondItem="r4t-lJ-K3e" secondAttribute="bottom" constant="16" id="wOQ-mm-meU"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="searchTextField" destination="ecb-m6-EIU" id="CIQ-Zc-g2W"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
