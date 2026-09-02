@@ -6,27 +6,36 @@
 //
 
 import UIKit
+import RxSwift
 
 class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     @IBOutlet weak var searchTextField: UITextField!
+    @IBOutlet weak var tableView: UITableView!
     
     private let viewModel: PhotoSearchViewModel
+    private let disposeBag = DisposeBag()
+    private var photos: [Photo] = []
     
     init() {
         let apiClient = PexelsAPIClient()
-        self.viewModel = PhotoSearchViewModel(apiClient: apiClient)
+        let asyncImage = AsyncImage()
+        self.viewModel = PhotoSearchViewModel(apiClient: apiClient, asyncImage: asyncImage)
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
         let apiClient = PexelsAPIClient()
-        self.viewModel = PhotoSearchViewModel(apiClient: apiClient)
+        let asyncImage = AsyncImage()
+        self.viewModel = PhotoSearchViewModel(apiClient: apiClient, asyncImage: asyncImage)
         super.init(coder: coder)
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.dataSource = self
+        tableView.delegate = self
     }
     
     @IBAction func searchButtonTapped(_ sender: Any) {
@@ -36,16 +45,27 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         }
 
         viewModel.search(query: query)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] photos in
+                    self?.photos = photos
+                    self?.tableView.reloadData()
+                },
+                onFailure: { error in
+                    print(error)
+                }
+            )
+            .disposed(by: disposeBag)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 0
+        return photos.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = "Row \(indexPath.row)"
+        let cell = tableView.dequeueReusableCell(withIdentifier: "PhotoTableViewCell", for: indexPath) as! PhotoTableViewCell
+        let photo = photos[indexPath.row]
+        cell.configure(with: photo)
         return cell
     }
 }
-
