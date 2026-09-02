@@ -12,6 +12,9 @@ final class PhotoSearchViewModel {
     
     private let apiClient: PexelsAPIClient
     private let asyncImage: AsyncImage
+    private var currentPage = 1
+    private var currentQuery = ""
+    private var isLoading = false
     
     init(apiClient: PexelsAPIClient, asyncImage: AsyncImage) {
         self.apiClient = apiClient
@@ -19,10 +22,42 @@ final class PhotoSearchViewModel {
     }
 
     func search(query: String) -> Single<[Photo]> {
-        return apiClient.search(query: query)
+        currentPage = 1
+        currentQuery = query
+        
+        return apiClient.search(query: query, page: currentPage)
             .map { response in
                 response.photos
             }
+    }
+    
+    func searchNextPage() -> Single<[Photo]> {
+        guard !currentQuery.isEmpty else {
+            return Single.just([])
+        }
+
+        guard !isLoading else {
+            return Single.just([])
+        }
+
+        isLoading = true
+        currentPage += 1
+
+        return apiClient.search(
+            query: currentQuery,
+            page: currentPage
+        )
+        .map { response in
+            response.photos
+        }
+        .do(
+            onSuccess: { [weak self] _ in
+                self?.isLoading = false
+            },
+            onError: { [weak self] _ in
+                self?.isLoading = false
+            }
+        )
     }
     
     func loadImage(for photo: Photo) -> Single<Data?> {

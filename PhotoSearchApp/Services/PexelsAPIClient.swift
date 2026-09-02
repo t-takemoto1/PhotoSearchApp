@@ -22,13 +22,14 @@ final class PexelsAPIClient {
     }
     
     // 検索
-    func search(query: String) -> Single<PexelsResponse> {
+    func search(query: String, page: Int = 1) -> Single<PexelsResponse> {
         var components = URLComponents(
             string: APIEndpoints.searchPhotosURL
         )
         
         components?.queryItems = [
             URLQueryItem(name: "query", value: query),
+            URLQueryItem(name: "page", value: "\(page)"),
             URLQueryItem(name: "per_page", value: "20")
         ]
         
@@ -78,12 +79,13 @@ final class PexelsAPIClient {
         }
     }
     
-    func fetchCurated() -> Single<PexelsResponse> {
+    func fetchCurated(page: Int = 1) -> Single<PexelsResponse> {
         var components = URLComponents(
             string: APIEndpoints.curatedURL
         )
 
         components?.queryItems = [
+            URLQueryItem(name: "page", value: "\(page)"),
             URLQueryItem(name: "per_page", value: "20")
         ]
 

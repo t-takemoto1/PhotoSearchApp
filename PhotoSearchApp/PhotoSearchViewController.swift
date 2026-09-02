@@ -86,4 +86,33 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         cell.configure(with: photo, asyncImage: asyncImage)
         return cell
     }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let frameHeight = scrollView.frame.size.height
+
+        if offsetY > contentHeight - frameHeight - 200 {
+            loadNextPage()
+        }
+    }
+    
+    private func loadNextPage() {
+        viewModel.searchNextPage()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] photos in
+                    guard let self else {
+                        return
+                    }
+
+                    self.photos.append(contentsOf: photos)
+                    self.tableView.reloadData()
+                },
+                onFailure: { error in
+                    print(error)
+                }
+            )
+            .disposed(by: disposeBag)
+    }
 }
