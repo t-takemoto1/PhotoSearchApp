@@ -20,14 +20,12 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
     
     init() {
         let apiClient = PexelsAPIClient()
-        let asyncImage = AsyncImage()
         self.viewModel = PhotoSearchViewModel(apiClient: apiClient, asyncImage: asyncImage)
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
         let apiClient = PexelsAPIClient()
-        let asyncImage = AsyncImage()
         self.viewModel = PhotoSearchViewModel(apiClient: apiClient, asyncImage: asyncImage)
         super.init(coder: coder)
     }
@@ -98,7 +96,7 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
     }
     
     private func loadNextPage() {
-        viewModel.searchNextPage()
+        viewModel.fetchNextPage()
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onSuccess: { [weak self] photos in

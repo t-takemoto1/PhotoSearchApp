@@ -31,33 +31,40 @@ final class PhotoSearchViewModel {
             }
     }
     
-    func searchNextPage() -> Single<[Photo]> {
-        guard !currentQuery.isEmpty else {
-            return Single.just([])
-        }
-
+    func fetchNextPage() -> Single<[Photo]> {
         guard !isLoading else {
             return Single.just([])
         }
 
         isLoading = true
-        currentPage += 1
+        let nextPage = currentPage + 1
 
-        return apiClient.search(
-            query: currentQuery,
-            page: currentPage
-        )
-        .map { response in
-            response.photos
+        let request: Single<PexelsResponse>
+
+        if currentQuery.isEmpty {
+            // Curated表示中
+            request = apiClient.fetchCurated(page: nextPage)
+        } else {
+            // 検索結果表示中
+            request = apiClient.search(
+                query: currentQuery,
+                page: nextPage
+            )
         }
-        .do(
-            onSuccess: { [weak self] _ in
-                self?.isLoading = false
-            },
-            onError: { [weak self] _ in
-                self?.isLoading = false
+
+        return request
+            .do(
+                onSuccess: { [weak self] response in
+                    self?.currentPage = response.page
+                    self?.isLoading = false
+                },
+                onError: { [weak self] _ in
+                    self?.isLoading = false
+                }
+            )
+            .map { response in
+                response.photos
             }
-        )
     }
     
     func loadImage(for photo: Photo) -> Single<Data?> {
