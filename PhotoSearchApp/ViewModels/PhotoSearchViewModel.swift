@@ -31,6 +31,8 @@ final class PhotoSearchViewModel {
     
     func fetchCurated() -> Single<[Photo]> {
         return apiClient.fetchCurated()
-            .map { $0.photos }
+            .map { response in
+                response.photos
+            }
     }
 }

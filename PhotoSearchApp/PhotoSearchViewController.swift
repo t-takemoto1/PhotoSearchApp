@@ -38,6 +38,10 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         tableView.dataSource = self
         tableView.delegate = self
 
+        fetchCurated()
+    }
+    
+    private func fetchCurated() {
         viewModel.fetchCurated()
             .observe(on: MainScheduler.instance)
             .subscribe(
