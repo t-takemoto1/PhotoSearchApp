@@ -13,7 +13,7 @@ struct Photo: Codable {
     let height: Int
     let url: String
     let photographer: String
-    let photographerURL: String
+    let photographerUrl: String
     let photographerId: Int
     let avgColor: String
     let src: PhotoSource

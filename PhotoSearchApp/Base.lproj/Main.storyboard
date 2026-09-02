@@ -20,13 +20,40 @@
                                 <rect key="frame" x="0.0" y="130.33333333333331" width="393" height="637.66666666666674"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="BiC-VA-EkC">
-                                        <rect key="frame" x="0.0" y="50.333333969116211" width="393" height="52"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="cell" id="BiC-VA-EkC" customClass="PhotoTableViewCell" customModule="PhotoTableViewCell">
+                                        <rect key="frame" x="0.0" y="50.333333969116211" width="393" height="117"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="BiC-VA-EkC" id="Qde-Cw-ai3">
-                                            <rect key="frame" x="0.0" y="0.0" width="393" height="52"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="393" height="117"/>
                                             <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="vJ6-8F-JcX">
+                                                    <rect key="frame" x="16" y="8" width="100" height="101"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="height" constant="100" id="3I0-Bz-d3c"/>
+                                                        <constraint firstAttribute="width" constant="100" id="ygR-4Y-3eG"/>
+                                                    </constraints>
+                                                </imageView>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="suT-eV-YEW">
+                                                    <rect key="frame" x="132" y="48.333333333333336" width="225" height="20.333333333333336"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="suT-eV-YEW" firstAttribute="leading" secondItem="vJ6-8F-JcX" secondAttribute="trailing" constant="16" id="DTq-4e-8Fh"/>
+                                                <constraint firstItem="vJ6-8F-JcX" firstAttribute="top" secondItem="Qde-Cw-ai3" secondAttribute="top" constant="8" id="Ijx-GW-X3C"/>
+                                                <constraint firstAttribute="bottom" secondItem="vJ6-8F-JcX" secondAttribute="bottom" constant="8" id="NXn-lA-9oP"/>
+                                                <constraint firstItem="suT-eV-YEW" firstAttribute="centerY" secondItem="Qde-Cw-ai3" secondAttribute="centerY" id="XFe-LK-3b4"/>
+                                                <constraint firstItem="vJ6-8F-JcX" firstAttribute="leading" secondItem="Qde-Cw-ai3" secondAttribute="leading" constant="16" id="bNN-hn-yyo"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="suT-eV-YEW" secondAttribute="trailing" constant="16" id="r9f-Zk-0qe"/>
+                                            </constraints>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="photoImageView" destination="vJ6-8F-JcX" id="kvr-e9-Kfd"/>
+                                            <outlet property="photographerLabel" destination="suT-eV-YEW" id="Hz6-Te-AXM"/>
+                                        </connections>
                                     </tableViewCell>
                                 </prototypes>
                                 <connections>
@@ -37,7 +64,7 @@
                             <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JGY-gq-Sg8">
                                 <rect key="frame" x="16" y="80" width="361" height="34.333333333333343"/>
                                 <subviews>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="SerchTextField" borderStyle="roundedRect" placeholder="検索ワードを入力してください" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ecb-m6-EIU">
+                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="検索ワードを入力してください" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ecb-m6-EIU">
                                         <rect key="frame" x="0.0" y="0.0" width="305" height="34.333333333333336"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
@@ -67,6 +94,7 @@
                     </view>
                     <connections>
                         <outlet property="searchTextField" destination="ecb-m6-EIU" id="CIQ-Zc-g2W"/>
+                        <outlet property="tableView" destination="r4t-lJ-K3e" id="Ppj-Be-3GH"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

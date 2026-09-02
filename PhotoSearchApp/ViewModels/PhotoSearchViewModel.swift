@@ -9,23 +9,23 @@ import Foundation
 import RxSwift
 
 final class PhotoSearchViewModel {
-    private let apiClient: PexelsAPIClient
-    private let disposeBag = DisposeBag()
     
-    init(apiClient: PexelsAPIClient) {
+    private let apiClient: PexelsAPIClient
+    private let asyncImage: AsyncImage
+    
+    init(apiClient: PexelsAPIClient, asyncImage: AsyncImage) {
         self.apiClient = apiClient
+        self.asyncImage = asyncImage
     }
 
-    func search(query: String) {
-        apiClient.search(query: query)
-            .subscribe(
-                onSuccess: { response in
-                    print("検索結果: \(response.photos.count)件")
-                },
-                onFailure: { error in
-                    print("検索エラー: \(error.localizedDescription)")
-                }
-            )
-            .disposed(by: disposeBag)
+    func search(query: String) -> Single<[Photo]> {
+        return apiClient.search(query: query)
+            .map { response in
+                response.photos
+            }
+    }
+    
+    func loadImage(for photo: Photo) -> Single<Data?> {
+        return asyncImage.loadImage(urlString: photo.src.medium)
     }
 }
