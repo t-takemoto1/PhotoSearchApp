@@ -12,18 +12,19 @@ import RxSwift
 final class PhotoTableViewCell: UITableViewCell {
     
     @IBOutlet private weak var photoImageView: UIImageView!
-    @IBOutlet weak var photographerLabel: UILabel!
-    
-    private let asyncImage = AsyncImage()
+    @IBOutlet private weak var photographerLabel: UILabel!
+
     private var disposeBag = DisposeBag()
     
     override func prepareForReuse() {
         super.prepareForReuse()
+        
         disposeBag = DisposeBag()
         photoImageView.image = nil
+        photographerLabel.text = nil
     }
     
-    func configure(with photo: Photo) {
+    func configure(with photo: Photo, asyncImage: AsyncImage) {
         photoImageView.image = nil
         photographerLabel.text = photo.photographer
 

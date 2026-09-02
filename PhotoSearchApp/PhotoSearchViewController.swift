@@ -14,6 +14,7 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
     @IBOutlet weak var tableView: UITableView!
     
     private let viewModel: PhotoSearchViewModel
+    private let asyncImage = AsyncImage()
     private let disposeBag = DisposeBag()
     private var photos: [Photo] = []
     
@@ -36,6 +37,19 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         
         tableView.dataSource = self
         tableView.delegate = self
+
+        viewModel.fetchCurated()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] photos in
+                    self?.photos = photos
+                    self?.tableView.reloadData()
+                },
+                onFailure: { error in
+                    print(error)
+                }
+            )
+            .disposed(by: disposeBag)
     }
     
     @IBAction func searchButtonTapped(_ sender: Any) {
@@ -65,7 +79,7 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "PhotoTableViewCell", for: indexPath) as! PhotoTableViewCell
         let photo = photos[indexPath.row]
-        cell.configure(with: photo)
+        cell.configure(with: photo, asyncImage: asyncImage)
         return cell
     }
 }

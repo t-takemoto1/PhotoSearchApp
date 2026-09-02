@@ -28,4 +28,9 @@ final class PhotoSearchViewModel {
     func loadImage(for photo: Photo) -> Single<Data?> {
         return asyncImage.loadImage(urlString: photo.src.medium)
     }
+    
+    func fetchCurated() -> Single<[Photo]> {
+        return apiClient.fetchCurated()
+            .map { $0.photos }
+    }
 }

@@ -77,4 +77,59 @@ final class PexelsAPIClient {
             }
         }
     }
+    
+    func fetchCurated() -> Single<PexelsResponse> {
+        var components = URLComponents(
+            string: APIEndpoints.curatedURL
+        )
+
+        components?.queryItems = [
+            URLQueryItem(name: "per_page", value: "20")
+        ]
+
+        guard let url = components?.url else {
+            return Single.error(URLError(.badURL))
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(apiKey, forHTTPHeaderField: "Authorization")
+
+        return Single.create { observer in
+            let task = URLSession.shared.dataTask(with: request) { data, _, error in
+                if let error {
+                    observer(.failure(error))
+                    return
+                }
+
+                guard let data else {
+                    observer(
+                        .failure(
+                            URLError(.badServerResponse)
+                        )
+                    )
+                    return
+                }
+
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+                    let response = try decoder.decode(
+                        PexelsResponse.self,
+                        from: data
+                    )
+
+                    observer(.success(response))
+                } catch {
+                    observer(.failure(error))
+                }
+            }
+
+            task.resume()
+
+            return Disposables.create {
+                task.cancel()
+            }
+        }
+    }
 }
