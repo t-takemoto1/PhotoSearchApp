@@ -84,6 +84,20 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         cell.configure(with: photo, asyncImage: asyncImage)
         return cell
     }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let photo = photos[indexPath.row]
+        showFullScreenPhoto(photo)
+    }
+
+    private func showFullScreenPhoto(_ photo: Photo) {
+        let viewController = PhotoDetailViewController(
+            photo: photo,
+            asyncImage: asyncImage
+        )
+        present(viewController, animated: true)
+    }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let offsetY = scrollView.contentOffset.y
