@@ -64,7 +64,7 @@
                             <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JGY-gq-Sg8">
                                 <rect key="frame" x="16" y="80" width="361" height="34.333333333333343"/>
                                 <subviews>
-                                    <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="検索ワードを入力してください" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ecb-m6-EIU">
+                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="検索ワードを入力してください" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="ecb-m6-EIU">
                                         <rect key="frame" x="0.0" y="0.0" width="305" height="34.333333333333336"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <textInputTraits key="textInputTraits"/>
@@ -93,6 +93,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="searchButton" destination="SNr-Cx-Tpg" id="Zz0-hw-HL0"/>
                         <outlet property="searchTextField" destination="ecb-m6-EIU" id="CIQ-Zc-g2W"/>
                         <outlet property="tableView" destination="r4t-lJ-K3e" id="Ppj-Be-3GH"/>
                     </connections>

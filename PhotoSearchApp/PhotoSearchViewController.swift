@@ -11,6 +11,7 @@ import RxSwift
 class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     @IBOutlet weak var searchTextField: UITextField!
+    @IBOutlet weak var searchButton: UIButton!
     @IBOutlet weak var tableView: UITableView!
     
     private let viewModel: PhotoSearchViewModel
@@ -32,11 +33,37 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        setupSearchUI()
         tableView.dataSource = self
         tableView.delegate = self
 
         fetchCurated()
+    }
+
+    private func setupSearchUI() {
+        searchTextField.placeholder = "写真を検索"
+        searchTextField.borderStyle = .none
+        searchTextField.backgroundColor = .secondarySystemBackground
+        searchTextField.layer.cornerRadius = 10
+
+        let paddingView = UIView(
+            frame: CGRect(x: 0, y: 0, width: 12, height: 1)
+        )
+        searchTextField.leftView = paddingView
+        searchTextField.leftViewMode = .always
+
+        var configuration = UIButton.Configuration.filled()
+        configuration.title = "検索"
+        configuration.cornerStyle = .medium
+        searchButton.configuration = configuration
+
+        searchTextField.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        searchButton.heightAnchor.constraint(equalTo: searchTextField.heightAnchor).isActive = true
+        searchButton.widthAnchor.constraint(equalToConstant: 72).isActive = true
+
+        if let stackView = searchTextField.superview as? UIStackView {
+            stackView.spacing = 12
+        }
     }
     
     private func fetchCurated() {
