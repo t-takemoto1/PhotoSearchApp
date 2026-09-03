@@ -108,11 +108,28 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
                         self.tableView.backgroundView = nil
                     }
                 },
-                onFailure: { error in
-                    print(error)
+                onFailure: { [weak self] error in
+                    self?.showAlert(
+                        title: "通信エラー",
+                        message: error.localizedDescription
+                    )
                 }
             )
             .disposed(by: disposeBag)
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+
+        alert.addAction(
+            UIAlertAction(title: "OK", style: .default)
+        )
+
+        present(alert, animated: true)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

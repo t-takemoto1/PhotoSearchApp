@@ -51,6 +51,12 @@ final class PexelsAPIClient {
                     return
                 }
 
+                guard let httpResponse = response as? HTTPURLResponse,
+                      200..<300 ~= httpResponse.statusCode else {
+                    observer(.failure(URLError(.badServerResponse)))
+                    return
+                }
+
                 guard let data else {
                     observer(.failure(URLError(.badServerResponse)))
                     return
@@ -97,9 +103,15 @@ final class PexelsAPIClient {
         request.setValue(apiKey, forHTTPHeaderField: "Authorization")
 
         return Single.create { observer in
-            let task = URLSession.shared.dataTask(with: request) { data, _, error in
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error {
                     observer(.failure(error))
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse,
+                      200..<300 ~= httpResponse.statusCode else {
+                    observer(.failure(URLError(.badServerResponse)))
                     return
                 }
 
