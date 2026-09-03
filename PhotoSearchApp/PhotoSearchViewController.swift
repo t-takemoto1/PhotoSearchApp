@@ -91,8 +91,22 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onSuccess: { [weak self] photos in
-                    self?.photos = photos
-                    self?.tableView.reloadData()
+                    guard let self else {
+                        return
+                    }
+
+                    self.photos = photos
+                    self.tableView.reloadData()
+
+                    if photos.isEmpty {
+                        let label = UILabel()
+                        label.text = "写真が見つかりません"
+                        label.textAlignment = .center
+                        label.textColor = .secondaryLabel
+                        self.tableView.backgroundView = label
+                    } else {
+                        self.tableView.backgroundView = nil
+                    }
                 },
                 onFailure: { error in
                     print(error)
