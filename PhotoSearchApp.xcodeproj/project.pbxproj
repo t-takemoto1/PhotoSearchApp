@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1897981D3043E2BE0045212D /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 1897981C3043E2BE0045212D /* RxCocoa */; };
 		1897981F3043E2BE0045212D /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1897981E3043E2BE0045212D /* RxSwift */; };
 /* End PBXBuildFile section */
 
@@ -71,7 +70,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				1897981F3043E2BE0045212D /* RxSwift in Frameworks */,
-				1897981D3043E2BE0045212D /* RxCocoa in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,7 +130,6 @@
 			);
 			name = PhotoSearchApp;
 			packageProductDependencies = (
-				1897981C3043E2BE0045212D /* RxCocoa */,
 				1897981E3043E2BE0045212D /* RxSwift */,
 			);
 			productName = PhotoSearchApp;
@@ -608,11 +605,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1897981C3043E2BE0045212D /* RxCocoa */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1897981B3043E2BE0045212D /* XCRemoteSwiftPackageReference "RxSwift" */;
-			productName = RxCocoa;
-		};
 		1897981E3043E2BE0045212D /* RxSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1897981B3043E2BE0045212D /* XCRemoteSwiftPackageReference "RxSwift" */;
