@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PexelsResponse: Codable {
+nonisolated struct PexelsResponse: Codable {
     let totalResults: Int
     let page: Int
     let perPage: Int

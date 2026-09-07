@@ -5,10 +5,9 @@
 //  Created by takemoto on 2026/08/29.
 //
 
+import Foundation
+
 enum APIEndpoints {
-    static let baseURL = "https://api.pexels.com/v1/"
-    
-    static let getPhotosURL = "\(baseURL)photos/"
-    static let searchPhotosURL = "\(baseURL)search"
-    static let curatedURL = "\(baseURL)curated"
+    static let searchPhotos = URL(string: "https://api.pexels.com/v1/search")!
+    static let curatedPhotos = URL(string: "https://api.pexels.com/v1/curated")!
 }

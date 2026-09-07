@@ -8,132 +8,130 @@
 import Foundation
 import RxSwift
 
-final class PexelsAPIClient {
-    
-    private let apiKey: String
+protocol PexelsAPIClientProtocol {
+    func search(query: String, page: Int) -> Single<PexelsResponse>
+    func fetchCurated(page: Int) -> Single<PexelsResponse>
+}
 
-    init() {
-        guard let apiKey = Bundle.main.object(
-            forInfoDictionaryKey: "PEXELS_API_KEY"
-        ) as? String else {
-            fatalError("PEXELS_API_KEY is not configured")
+enum PexelsAPIClientError: LocalizedError, Equatable {
+    case missingAPIKey
+    case invalidURL
+    case invalidResponse
+    case server(statusCode: Int)
+    case missingResponseData
+
+    var errorDescription: String? {
+        switch self {
+        case .missingAPIKey:
+            return "Pexels APIキーが設定されていません。"
+        case .invalidURL:
+            return "リクエストURLを作成できませんでした。"
+        case .invalidResponse:
+            return "サーバーから不正なレスポンスが返されました。"
+        case let .server(statusCode):
+            return "サーバーエラーが発生しました（HTTP \(statusCode)）。"
+        case .missingResponseData:
+            return "サーバーからデータを受け取れませんでした。"
         }
-        self.apiKey = apiKey
     }
-    
-    // 検索
+}
+
+final class PexelsAPIClient: PexelsAPIClientProtocol {
+
+    private enum Constants {
+        static let pageSize = 20
+        static let apiKeyInfoPlistKey = "PEXELS_API_KEY"
+    }
+
+    private let apiKey: String?
+    private let session: URLSession
+
+    init(
+        apiKey: String? = nil,
+        session: URLSession = .shared,
+        bundle: Bundle = .main
+    ) {
+        let configuredAPIKey = apiKey ?? bundle.object(
+            forInfoDictionaryKey: Constants.apiKeyInfoPlistKey
+        ) as? String
+
+        self.apiKey = configuredAPIKey?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.session = session
+    }
+
     func search(query: String, page: Int = 1) -> Single<PexelsResponse> {
-        var components = URLComponents(
-            string: APIEndpoints.searchPhotosURL
+        request(
+            endpoint: APIEndpoints.searchPhotos,
+            queryItems: [
+                URLQueryItem(name: "query", value: query),
+                URLQueryItem(name: "page", value: String(page)),
+                URLQueryItem(name: "per_page", value: String(Constants.pageSize))
+            ]
         )
-        
-        components?.queryItems = [
-            URLQueryItem(name: "query", value: query),
-            URLQueryItem(name: "page", value: "\(page)"),
-            URLQueryItem(name: "per_page", value: "20")
-        ]
-        
-        guard let url = components?.url else {
-            return Single.error(URLError(.badURL))
-        }
-
-        var request = URLRequest(url: url)
-        
-        request.setValue(
-            apiKey,
-            forHTTPHeaderField: "Authorization"
-        )
-
-        return Single.create { observer in
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error {
-                    observer(.failure(error))
-                    return
-                }
-
-                guard let httpResponse = response as? HTTPURLResponse,
-                      200..<300 ~= httpResponse.statusCode else {
-                    observer(.failure(URLError(.badServerResponse)))
-                    return
-                }
-
-                guard let data else {
-                    observer(.failure(URLError(.badServerResponse)))
-                    return
-                }
-
-                do {
-                    let decoder = JSONDecoder()
-                    decoder.keyDecodingStrategy = .convertFromSnakeCase
-
-                    let response = try decoder.decode(
-                        PexelsResponse.self,
-                        from: data
-                    )
-
-                    observer(.success(response))
-                } catch {
-                    observer(.failure(error))
-                }
-            }
-
-            task.resume()
-
-            return Disposables.create {
-                task.cancel()
-            }
-        }
     }
-    
-    func fetchCurated(page: Int = 1) -> Single<PexelsResponse> {
-        var components = URLComponents(
-            string: APIEndpoints.curatedURL
-        )
 
-        components?.queryItems = [
-            URLQueryItem(name: "page", value: "\(page)"),
-            URLQueryItem(name: "per_page", value: "20")
-        ]
+    func fetchCurated(page: Int = 1) -> Single<PexelsResponse> {
+        request(
+            endpoint: APIEndpoints.curatedPhotos,
+            queryItems: [
+                URLQueryItem(name: "page", value: String(page)),
+                URLQueryItem(name: "per_page", value: String(Constants.pageSize))
+            ]
+        )
+    }
+
+    private func request(
+        endpoint: URL,
+        queryItems: [URLQueryItem]
+    ) -> Single<PexelsResponse> {
+        guard let apiKey, !apiKey.isEmpty, !apiKey.contains("$(") else {
+            return .error(PexelsAPIClientError.missingAPIKey)
+        }
+
+        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)
+        components?.queryItems = queryItems
 
         guard let url = components?.url else {
-            return Single.error(URLError(.badURL))
+            return .error(PexelsAPIClientError.invalidURL)
         }
 
         var request = URLRequest(url: url)
+        request.httpMethod = "GET"
         request.setValue(apiKey, forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        return Single.create { observer in
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        return Single.create { [session] observer in
+            let task = session.dataTask(with: request) { data, response, error in
                 if let error {
                     observer(.failure(error))
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse,
-                      200..<300 ~= httpResponse.statusCode else {
-                    observer(.failure(URLError(.badServerResponse)))
+                guard let response = response as? HTTPURLResponse else {
+                    observer(.failure(PexelsAPIClientError.invalidResponse))
                     return
                 }
 
-                guard let data else {
+                guard 200..<300 ~= response.statusCode else {
                     observer(
                         .failure(
-                            URLError(.badServerResponse)
+                            PexelsAPIClientError.server(
+                                statusCode: response.statusCode
+                            )
                         )
                     )
                     return
                 }
 
+                guard let data else {
+                    observer(.failure(PexelsAPIClientError.missingResponseData))
+                    return
+                }
+
                 do {
                     let decoder = JSONDecoder()
                     decoder.keyDecodingStrategy = .convertFromSnakeCase
-
-                    let response = try decoder.decode(
-                        PexelsResponse.self,
-                        from: data
-                    )
-
-                    observer(.success(response))
+                    observer(.success(try decoder.decode(PexelsResponse.self, from: data)))
                 } catch {
                     observer(.failure(error))
                 }

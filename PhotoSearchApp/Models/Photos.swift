@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Photo: Codable {
+nonisolated struct Photo: Codable {
     let id: Int
     let width: Int
     let height: Int
@@ -21,7 +21,7 @@ struct Photo: Codable {
     let alt: String
 }
 
-struct PhotoSource: Codable {
+nonisolated struct PhotoSource: Codable {
     let original: String
     let large2x: String
     let large: String
