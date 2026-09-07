@@ -9,72 +9,74 @@ import Foundation
 import RxSwift
 
 final class PhotoSearchViewModel {
-    
-    private let apiClient: PexelsAPIClient
-    private let asyncImage: AsyncImage
-    private var currentPage = 1
-    private var currentQuery = ""
+
+    private enum SearchMode {
+        case curated
+        case query(String)
+    }
+
+    private let apiClient: PexelsAPIClientProtocol
+    private var searchMode: SearchMode = .curated
+    private var currentPage = 0
+    private var hasNextPage = true
     private var isLoading = false
-    
-    init(apiClient: PexelsAPIClient, asyncImage: AsyncImage) {
+
+    init(apiClient: PexelsAPIClientProtocol) {
         self.apiClient = apiClient
-        self.asyncImage = asyncImage
     }
 
     func search(query: String) -> Single<[Photo]> {
-        currentPage = 1
-        currentQuery = query
-        
-        return apiClient.search(query: query, page: currentPage)
-            .map { response in
-                response.photos
-            }
+        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !normalizedQuery.isEmpty else {
+            return fetchCurated()
+        }
+
+        return loadFirstPage(for: .query(normalizedQuery))
     }
-    
+
     func fetchNextPage() -> Single<[Photo]> {
-        guard !isLoading else {
+        guard currentPage > 0, !isLoading, hasNextPage else {
             return Single.just([])
         }
 
-        isLoading = true
         let nextPage = currentPage + 1
+        return load(page: nextPage, for: searchMode)
+    }
+
+    func fetchCurated() -> Single<[Photo]> {
+        loadFirstPage(for: .curated)
+    }
+
+    private func loadFirstPage(for mode: SearchMode) -> Single<[Photo]> {
+        searchMode = mode
+        currentPage = 0
+        hasNextPage = true
+        return load(page: 1, for: mode)
+    }
+
+    private func load(page: Int, for mode: SearchMode) -> Single<[Photo]> {
+        isLoading = true
 
         let request: Single<PexelsResponse>
-
-        if currentQuery.isEmpty {
-            // Curated表示中
-            request = apiClient.fetchCurated(page: nextPage)
-        } else {
-            // 検索結果表示中
-            request = apiClient.search(
-                query: currentQuery,
-                page: nextPage
-            )
+        switch mode {
+        case .curated:
+            request = apiClient.fetchCurated(page: page)
+        case let .query(query):
+            request = apiClient.search(query: query, page: page)
         }
 
         return request
             .do(
                 onSuccess: { [weak self] response in
-                    self?.currentPage = response.page
-                    self?.isLoading = false
+                    guard let self else { return }
+                    self.currentPage = response.page
+                    self.hasNextPage = response.nextPage != nil
                 },
-                onError: { [weak self] _ in
+                onDispose: { [weak self] in
                     self?.isLoading = false
                 }
             )
-            .map { response in
-                response.photos
-            }
-    }
-    
-    func loadImage(for photo: Photo) -> Single<Data?> {
-        return asyncImage.loadImage(urlString: photo.src.medium)
-    }
-    
-    func fetchCurated() -> Single<[Photo]> {
-        return apiClient.fetchCurated()
-            .map { response in
-                response.photos
-            }
+            .map(\.photos)
     }
 }

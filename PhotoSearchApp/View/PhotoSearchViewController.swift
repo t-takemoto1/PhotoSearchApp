@@ -8,36 +8,56 @@
 import UIKit
 import RxSwift
 
-class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    
-    @IBOutlet weak var searchTextField: UITextField!
-    @IBOutlet weak var searchButton: UIButton!
-    @IBOutlet weak var tableView: UITableView!
-    
+final class PhotoSearchViewController: UIViewController {
+
+    @IBOutlet private weak var searchTextField: UITextField!
+    @IBOutlet private weak var searchButton: UIButton!
+    @IBOutlet private weak var tableView: UITableView!
+
     private let viewModel: PhotoSearchViewModel
-    private let asyncImage = AsyncImage()
-    private let disposeBag = DisposeBag()
+    private let imageLoader: ImageLoading
+    private var requestDisposeBag = DisposeBag()
     private var photos: [Photo] = []
-    
-    init() {
-        let apiClient = PexelsAPIClient()
-        self.viewModel = PhotoSearchViewModel(apiClient: apiClient, asyncImage: asyncImage)
+
+    private lazy var emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.textColor = .secondaryLabel
+        label.numberOfLines = 0
+        return label
+    }()
+
+    init(viewModel: PhotoSearchViewModel, imageLoader: ImageLoading) {
+        self.viewModel = viewModel
+        self.imageLoader = imageLoader
         super.init(nibName: nil, bundle: nil)
     }
 
+    convenience init() {
+        let imageLoader = ImageLoader()
+        let viewModel = PhotoSearchViewModel(
+            apiClient: PexelsAPIClient()
+        )
+        self.init(viewModel: viewModel, imageLoader: imageLoader)
+    }
+
     required init?(coder: NSCoder) {
-        let apiClient = PexelsAPIClient()
-        self.viewModel = PhotoSearchViewModel(apiClient: apiClient, asyncImage: asyncImage)
+        let imageLoader = ImageLoader()
+        self.viewModel = PhotoSearchViewModel(
+            apiClient: PexelsAPIClient()
+        )
+        self.imageLoader = imageLoader
         super.init(coder: coder)
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         setupSearchUI()
         tableView.dataSource = self
         tableView.delegate = self
-
-        fetchCurated()
+        tableView.accessibilityIdentifier = "photoTableView"
+        loadInitialPhotos(viewModel.fetchCurated())
     }
 
     private func setupSearchUI() {
@@ -45,6 +65,8 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         searchTextField.borderStyle = .none
         searchTextField.backgroundColor = .secondarySystemBackground
         searchTextField.layer.cornerRadius = 10
+        searchTextField.delegate = self
+        searchTextField.accessibilityIdentifier = "searchTextField"
 
         let paddingView = UIView(
             frame: CGRect(x: 0, y: 0, width: 12, height: 1)
@@ -56,6 +78,7 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
         configuration.title = "検索"
         configuration.cornerStyle = .medium
         searchButton.configuration = configuration
+        searchButton.accessibilityIdentifier = "searchButton"
 
         searchTextField.heightAnchor.constraint(equalToConstant: 44).isActive = true
         searchButton.heightAnchor.constraint(equalTo: searchTextField.heightAnchor).isActive = true
@@ -65,59 +88,69 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
             stackView.spacing = 12
         }
     }
-    
-    private func fetchCurated() {
-        viewModel.fetchCurated()
+
+    private func loadInitialPhotos(_ request: Single<[Photo]>) {
+        setSearchLoading(true)
+        photos.removeAll()
+        tableView.backgroundView = nil
+        tableView.reloadData()
+
+        request
             .observe(on: MainScheduler.instance)
             .subscribe(
                 onSuccess: { [weak self] photos in
-                    self?.photos = photos
-                    self?.tableView.reloadData()
+                    guard let self else { return }
+                    self.setSearchLoading(false)
+                    self.photos = photos
+                    self.updateEmptyState()
+                    self.tableView.reloadData()
                 },
-                onFailure: { error in
-                    print(error)
+                onFailure: { [weak self] error in
+                    self?.setSearchLoading(false)
+                    self?.handle(error: error)
                 }
             )
-            .disposed(by: disposeBag)
+            .disposed(by: requestDisposeBag)
     }
-    
+
     @IBAction func searchButtonTapped(_ sender: Any) {
-        guard let query = searchTextField.text,
-              !query.isEmpty else {
+        search()
+    }
+
+    private func search() {
+        searchTextField.resignFirstResponder()
+        cancelCurrentRequest()
+        loadInitialPhotos(viewModel.search(query: searchTextField.text ?? ""))
+    }
+
+    private func updateEmptyState() {
+        if photos.isEmpty {
+            emptyStateLabel.text = "写真が見つかりません"
+            tableView.backgroundView = emptyStateLabel
+        } else {
+            tableView.backgroundView = nil
+        }
+    }
+
+    private func setSearchLoading(_ isLoading: Bool) {
+        searchButton.isEnabled = !isLoading
+    }
+
+    private func cancelCurrentRequest() {
+        requestDisposeBag = DisposeBag()
+    }
+
+    private func handle(error: Error) {
+        guard (error as? URLError)?.code != .cancelled else {
             return
         }
 
-        viewModel.search(query: query)
-            .observe(on: MainScheduler.instance)
-            .subscribe(
-                onSuccess: { [weak self] photos in
-                    guard let self else {
-                        return
-                    }
-
-                    self.photos = photos
-                    self.tableView.reloadData()
-
-                    if photos.isEmpty {
-                        let label = UILabel()
-                        label.text = "写真が見つかりません"
-                        label.textAlignment = .center
-                        label.textColor = .secondaryLabel
-                        self.tableView.backgroundView = label
-                    } else {
-                        self.tableView.backgroundView = nil
-                    }
-                },
-                onFailure: { [weak self] error in
-                    self?.showAlert(
-                        title: "通信エラー",
-                        message: error.localizedDescription
-                    )
-                }
-            )
-            .disposed(by: disposeBag)
+        showAlert(
+            title: "通信エラー",
+            message: error.localizedDescription
+        )
     }
-    
+
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(
             title: title,
@@ -131,20 +164,55 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
 
         present(alert, animated: true)
     }
-    
+
+    private func loadNextPage() {
+        viewModel.fetchNextPage()
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] nextPhotos in
+                    guard let self, !nextPhotos.isEmpty else {
+                        return
+                    }
+
+                    self.photos.append(contentsOf: nextPhotos)
+                    self.tableView.reloadData()
+                },
+                onFailure: { [weak self] error in
+                    self?.handle(error: error)
+                }
+            )
+            .disposed(by: requestDisposeBag)
+    }
+}
+
+extension PhotoSearchViewController: UITableViewDelegate, UITableViewDataSource {
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return photos.count
     }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "PhotoTableViewCell", for: indexPath) as! PhotoTableViewCell
+
+    func tableView(
+        _ tableView: UITableView,
+        cellForRowAt indexPath: IndexPath
+    ) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: "PhotoTableViewCell",
+            for: indexPath
+        ) as? PhotoTableViewCell else {
+            return UITableViewCell()
+        }
+
         let photo = photos[indexPath.row]
-        cell.configure(with: photo, asyncImage: asyncImage)
+        cell.configure(with: photo, imageLoader: imageLoader)
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        guard photos.indices.contains(indexPath.row) else {
+            return
+        }
+
         let photo = photos[indexPath.row]
         showFullScreenPhoto(photo)
     }
@@ -152,37 +220,32 @@ class PhotoSearchViewController: UIViewController, UITableViewDelegate, UITableV
     private func showFullScreenPhoto(_ photo: Photo) {
         let viewController = PhotoDetailViewController(
             photo: photo,
-            asyncImage: asyncImage
+            imageLoader: imageLoader
         )
         present(viewController, animated: true)
     }
-    
+}
+
+extension PhotoSearchViewController: UIScrollViewDelegate {
+
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let offsetY = scrollView.contentOffset.y
         let contentHeight = scrollView.contentSize.height
         let frameHeight = scrollView.frame.size.height
 
-        if offsetY > contentHeight - frameHeight - 200 {
-            loadNextPage()
+        guard contentHeight > frameHeight,
+              offsetY + frameHeight > contentHeight - 200 else {
+            return
         }
-    }
-    
-    private func loadNextPage() {
-        viewModel.fetchNextPage()
-            .observe(on: MainScheduler.instance)
-            .subscribe(
-                onSuccess: { [weak self] photos in
-                    guard let self else {
-                        return
-                    }
 
-                    self.photos.append(contentsOf: photos)
-                    self.tableView.reloadData()
-                },
-                onFailure: { error in
-                    print(error)
-                }
-            )
-            .disposed(by: disposeBag)
+        loadNextPage()
+    }
+}
+
+extension PhotoSearchViewController: UITextFieldDelegate {
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        search()
+        return true
     }
 }
